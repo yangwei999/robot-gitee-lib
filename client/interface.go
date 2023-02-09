@@ -1,4 +1,4 @@
-package giteeclient
+package client
 
 import sdk "github.com/opensourceways/go-gitee/gitee"
 

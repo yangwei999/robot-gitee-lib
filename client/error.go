@@ -1,4 +1,4 @@
-package giteeclient
+package client
 
 type ErrorForbidden struct {
 	err string

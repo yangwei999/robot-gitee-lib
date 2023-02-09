@@ -9,8 +9,8 @@ import (
 	"github.com/opensourceways/server-common-lib/secret"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opensourceways/robot-gitee-lib/giteeclient"
-	"github.com/opensourceways/robot-gitee-lib/robot-gitee-framework"
+	"github.com/opensourceways/robot-gitee-lib/client"
+	"github.com/opensourceways/robot-gitee-lib/framework"
 )
 
 type options struct {
@@ -51,7 +51,7 @@ func main() {
 
 	defer secretAgent.Stop()
 
-	c := giteeclient.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
+	c := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
 	r := newRobot(c)
 

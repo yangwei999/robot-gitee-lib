@@ -7,7 +7,7 @@ import (
 	"github.com/opensourceways/server-common-lib/config"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opensourceways/robot-gitee-lib/robot-gitee-framework"
+	"github.com/opensourceways/robot-gitee-lib/framework"
 )
 
 // TODO: set botName
