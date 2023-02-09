@@ -1,4 +1,4 @@
-package giteeclient
+package client
 
 import (
 	"context"
