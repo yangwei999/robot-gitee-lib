@@ -366,6 +366,11 @@ func (c *client) MergePR(owner, repo string, number int32, opt sdk.PullRequestMe
 	return formatErr(err, "merge pr")
 }
 
+func (c *client) ForkRepo(org, repo string) (sdk.Project, error) {
+	v, _, err := c.ac.RepositoriesApi.PostV5ReposOwnerRepoForks(context.Background(), org, repo, nil)
+	return v, formatErr(err, "fork repo")
+}
+
 func (c *client) GetGiteeRepo(org, repo string) (sdk.Project, error) {
 	v, _, err := c.ac.RepositoriesApi.GetV5ReposOwnerRepo(context.Background(), org, repo, nil)
 	return v, formatErr(err, "get repo")

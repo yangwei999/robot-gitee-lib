@@ -43,6 +43,7 @@ type Client interface {
 	UpdateRepo(org, repo string, info sdk.RepoPatchParam) error
 	GetRepo(org, repo string) (sdk.Project, error)
 	GetGiteeRepo(org, repo string) (sdk.Project, error)
+	ForkRepo(org, repo string) (sdk.Project, error)
 
 	SetRepoReviewer(org, repo string, reviewer sdk.SetRepoReviewer) error
 	CreateRepoLabel(org, repo, label, color string) error
