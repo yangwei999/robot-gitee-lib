@@ -1,160 +1,85 @@
 package framework
 
 import (
+	"io/ioutil"
+	"net/http"
 	"sync"
 
-	sdk "github.com/opensourceways/go-gitee/gitee"
 	"github.com/sirupsen/logrus"
-
-	"github.com/opensourceways/server-common-lib/config"
-)
-
-const (
-	logFieldOrg    = "org"
-	logFieldRepo   = "repo"
-	logFieldURL    = "url"
-	logFieldAction = "action"
 )
 
 type dispatcher struct {
-	agent *config.ConfigAgent
-
-	h handlers
+	h map[string]func([]byte, *logrus.Entry)
 
 	// Tracks running handlers for graceful shutdown
 	wg sync.WaitGroup
 }
 
-func (d *dispatcher) Wait() {
+func (d *dispatcher) wait() {
 	d.wg.Wait() // Handle remaining requests
 }
 
-func (d *dispatcher) Dispatch(eventType string, payload []byte, l *logrus.Entry) error {
-	switch eventType {
-	case sdk.EventTypeNote:
-		if d.h.noteEventHandler == nil {
-			return nil
-		}
-
-		e, err := sdk.ConvertToNoteEvent(payload)
-		if err != nil {
-			return err
-		}
-
-		d.wg.Add(1)
-		go d.handleNoteEvent(&e, l)
-
-	case sdk.EventTypeIssue:
-		if d.h.issueHandlers == nil {
-			return nil
-		}
-
-		e, err := sdk.ConvertToIssueEvent(payload)
-		if err != nil {
-			return err
-		}
-
-		d.wg.Add(1)
-		go d.handleIssueEvent(&e, l)
-
-	case sdk.EventTypePR:
-		if d.h.pullRequestHandler == nil {
-			return nil
-		}
-
-		e, err := sdk.ConvertToPREvent(payload)
-		if err != nil {
-			return err
-		}
-
-		d.wg.Add(1)
-		go d.handlePullRequestEvent(&e, l)
-
-	case sdk.EventTypePush:
-		if d.h.pushEventHandler == nil {
-			return nil
-		}
-
-		e, err := sdk.ConvertToPushEvent(payload)
-		if err != nil {
-			return err
-		}
-
-		d.wg.Add(1)
-		go d.handlePushEvent(&e, l)
-
-	default:
-		l.Debug("Ignoring unknown event type")
+func (d *dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	eventType, eventGUID, payload, ok := parseRequest(w, r)
+	if !ok {
+		return
 	}
-	return nil
+
+	handle, ok := d.h[eventType]
+	if !ok {
+		return
+	}
+
+	l := logrus.WithFields(
+		logrus.Fields{
+			"event-type": eventType,
+			"event_id":   eventGUID,
+		},
+	)
+
+	d.wg.Add(1)
+
+	go func() {
+		handle(payload, l)
+
+		d.wg.Done()
+	}()
 }
 
-func (d *dispatcher) getConfig() config.Config {
-	_, c := d.agent.GetConfig()
-	return c
-}
+func parseRequest(w http.ResponseWriter, r *http.Request) (
+	eventType string,
+	uuid string,
+	payload []byte,
+	ok bool,
+) {
+	defer r.Body.Close()
 
-func (d *dispatcher) handlePullRequestEvent(e *sdk.PullRequestEvent, l *logrus.Entry) {
-	defer d.wg.Done()
-
-	l = l.WithFields(logrus.Fields{
-		logFieldURL:    e.PullRequest.HtmlUrl,
-		logFieldAction: e.GetActionDesc(),
-	})
-
-	if err := d.h.pullRequestHandler(e, d.getConfig(), l); err != nil {
-		l.WithError(err).Error()
-	} else {
-		l.Info()
+	resp := func(code int, msg string) {
+		http.Error(w, msg, code)
 	}
-}
 
-func (d *dispatcher) handleIssueEvent(e *sdk.IssueEvent, l *logrus.Entry) {
-	defer d.wg.Done()
-
-	l = l.WithFields(logrus.Fields{
-		logFieldURL:    e.Issue.HtmlUrl,
-		logFieldAction: *e.Action,
-	})
-
-	if err := d.h.issueHandlers(e, d.getConfig(), l); err != nil {
-		l.WithError(err).Error()
-	} else {
-		l.Info()
+	if r.Header.Get("User-Agent") != "Robot-Gitee-Access" {
+		resp(http.StatusBadRequest, "400 Bad Request: unknown User-Agent Header")
+		return
 	}
-}
 
-func (d *dispatcher) handlePushEvent(e *sdk.PushEvent, l *logrus.Entry) {
-	defer d.wg.Done()
-
-	org, repo := e.GetOrgRepo()
-
-	l = l.WithFields(logrus.Fields{
-		logFieldOrg:  org,
-		logFieldRepo: repo,
-		"ref":        e.Ref,
-		"head":       e.After,
-	})
-
-	if err := d.h.pushEventHandler(e, d.getConfig(), l); err != nil {
-		l.WithError(err).Error()
-	} else {
-		l.Info()
+	if eventType = r.Header.Get("X-Gitee-Event"); eventType == "" {
+		resp(http.StatusBadRequest, "400 Bad Request: Missing X-Gitee-Event Header")
+		return
 	}
-}
 
-func (d *dispatcher) handleNoteEvent(e *sdk.NoteEvent, l *logrus.Entry) {
-	defer d.wg.Done()
-
-	l = l.WithFields(logrus.Fields{
-		"commenter":    e.Comment.User.Login,
-		logFieldURL:    e.Comment.HtmlUrl,
-		logFieldAction: *e.Action,
-	})
-
-	if err := d.h.noteEventHandler(e, d.getConfig(), l); err != nil {
-		l.WithError(err).Error()
-	} else {
-		l.Info()
+	if uuid = r.Header.Get("X-Gitee-Timestamp"); uuid == "" {
+		resp(http.StatusBadRequest, "400 Bad Request: Missing X-Gitee-Timestamp Header")
+		return
 	}
+
+	v, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		resp(http.StatusInternalServerError, "500 Internal Server Error: Failed to read request body")
+		return
+	}
+	payload = v
+	ok = true
+
+	return
 }

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 
+	"github.com/opensourceways/server-common-lib/config"
 	"github.com/opensourceways/server-common-lib/logrusutil"
 	liboptions "github.com/opensourceways/server-common-lib/options"
 	"github.com/opensourceways/server-common-lib/secret"
@@ -51,9 +53,27 @@ func main() {
 
 	defer secretAgent.Stop()
 
+	agent := config.NewConfigAgent(func() config.Config {
+		return &configuration{}
+	})
+
+	if err := agent.Start(o.service.ConfigFile); err != nil {
+		logrus.WithError(err).Errorf("start config:%s", o.service.ConfigFile)
+		return
+	}
+
+	defer agent.Stop()
+
 	c := client.NewClient(secretAgent.GetTokenGenerator(o.gitee.TokenPath))
 
-	r := newRobot(c)
+	r := newRobot(c, func() (*configuration, error) {
+		_, cfg := agent.GetConfig()
+		if c, ok := cfg.(*configuration); ok {
+			return c, nil
+		}
 
-	framework.Run(r, o.service)
+		return nil, errors.New("can't convert to configuration")
+	})
+
+	framework.Run(r, o.service.Port, o.service.GracePeriod)
 }

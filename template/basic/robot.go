@@ -1,13 +1,8 @@
 package main
 
 import (
-	"errors"
-
 	sdk "github.com/opensourceways/go-gitee/gitee"
-	"github.com/opensourceways/server-common-lib/config"
 	"github.com/sirupsen/logrus"
-
-	"github.com/opensourceways/robot-gitee-lib/framework"
 )
 
 // TODO: set botName
@@ -16,48 +11,31 @@ const botName = ""
 type iClient interface {
 }
 
-func newRobot(cli iClient) *robot {
-	return &robot{cli: cli}
+func newRobot(cli iClient, gc func() (*configuration, error)) *robot {
+	return &robot{cli: cli, getConfig: gc}
 }
 
 type robot struct {
-	cli iClient
+	getConfig func() (*configuration, error)
+	cli       iClient
 }
 
-func (bot *robot) NewConfig() config.Config {
-	return &configuration{}
-}
-
-func (bot *robot) getConfig(cfg config.Config) (*configuration, error) {
-	if c, ok := cfg.(*configuration); ok {
-		return c, nil
-	}
-	return nil, errors.New("can't convert to configuration")
-}
-
-func (bot *robot) RegisterEventHandler(f framework.HandlerRegister) {
-	f.RegisterIssueHandler(bot.handleIssueEvent)
-	f.RegisterPullRequestHandler(bot.handlePREvent)
-	f.RegisterNoteEventHandler(bot.handleNoteEvent)
-	f.RegisterPushEventHandler(bot.handlePushEvent)
-}
-
-func (bot *robot) handlePREvent(e *sdk.PullRequestEvent, c config.Config, log *logrus.Entry) error {
+func (bot *robot) handlePREvent(e *sdk.PullRequestEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand PR event, delete this function.
 	return nil
 }
 
-func (bot *robot) handleIssueEvent(e *sdk.IssueEvent, c config.Config, log *logrus.Entry) error {
+func (bot *robot) handleIssueEvent(e *sdk.IssueEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Issue event, delete this function.
 	return nil
 }
 
-func (bot *robot) handlePushEvent(e *sdk.PushEvent, c config.Config, log *logrus.Entry) error {
+func (bot *robot) handlePushEvent(e *sdk.PushEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Push event, delete this function.
 	return nil
 }
 
-func (bot *robot) handleNoteEvent(e *sdk.NoteEvent, c config.Config, log *logrus.Entry) error {
+func (bot *robot) handleNoteEvent(e *sdk.NoteEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Note event, delete this function.
 	return nil
 }
