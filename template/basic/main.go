@@ -75,5 +75,7 @@ func main() {
 		return nil, errors.New("can't convert to configuration")
 	})
 
-	framework.Run(r, o.service.Port, o.service.GracePeriod)
+	if err := framework.Run(r, o.service.Port, o.service.GracePeriod); err != nil {
+		logrus.WithError(err).Error("run server failed")
+	}
 }

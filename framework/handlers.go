@@ -17,9 +17,9 @@ type IssueEventHandler interface {
 	HandleIssueEvent(e *sdk.IssueEvent, log *logrus.Entry) error
 }
 
-// PullRequestHandler defines handler for sdk.PullRequestEvent.
+// PullRequestEventHandler defines handler for sdk.PullRequestEvent.
 type PullRequestEventHandler interface {
-	HandlePullRequestEvent(e *sdk.PullRequestEvent, log *logrus.Entry) error
+	HandlePREvent(e *sdk.PullRequestEvent, log *logrus.Entry) error
 }
 
 // PushEventHandler defines handler for sdk.PushEvent.
@@ -93,7 +93,7 @@ func (h *handlers) handlePullRequestEvent(payload []byte, l *logrus.Entry) {
 		logFieldAction: e.GetActionDesc(),
 	})
 
-	if err := h.pullRequestEventHandler.HandlePullRequestEvent(&e, l); err != nil {
+	if err := h.pullRequestEventHandler.HandlePREvent(&e, l); err != nil {
 		l.Error(err.Error())
 	} else {
 		l.Info()

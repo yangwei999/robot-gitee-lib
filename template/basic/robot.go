@@ -20,22 +20,22 @@ type robot struct {
 	cli       iClient
 }
 
-func (bot *robot) handlePREvent(e *sdk.PullRequestEvent, log *logrus.Entry) error {
+func (bot *robot) HandlePREvent(e *sdk.PullRequestEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand PR event, delete this function.
 	return nil
 }
 
-func (bot *robot) handleIssueEvent(e *sdk.IssueEvent, log *logrus.Entry) error {
+func (bot *robot) HandleIssueEvent(e *sdk.IssueEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Issue event, delete this function.
 	return nil
 }
 
-func (bot *robot) handlePushEvent(e *sdk.PushEvent, log *logrus.Entry) error {
+func (bot *robot) HandlePushEvent(e *sdk.PushEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Push event, delete this function.
 	return nil
 }
 
-func (bot *robot) handleNoteEvent(e *sdk.NoteEvent, log *logrus.Entry) error {
+func (bot *robot) HandleNoteEvent(e *sdk.NoteEvent, log *logrus.Entry) error {
 	// TODO: if it doesn't needd to hand Note event, delete this function.
 	return nil
 }
