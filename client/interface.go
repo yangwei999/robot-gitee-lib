@@ -4,6 +4,8 @@ import sdk "github.com/opensourceways/go-gitee/gitee"
 
 // Client interface for Gitee API
 type Client interface {
+	ListOrg() ([]string, error)
+
 	CreatePullRequest(org, repo, title, body, head, base string, canModify bool) (sdk.PullRequest, error)
 	GetPullRequests(org, repo string, opts ListPullRequestOpt) ([]sdk.PullRequest, error)
 	UpdatePullRequest(org, repo string, number int32, param sdk.PullRequestUpdateParam) (sdk.PullRequest, error)

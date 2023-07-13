@@ -690,6 +690,33 @@ func (c *client) PatchFile(owner, repo, path, branch, content, sha, message stri
 	return nil
 }
 
+func (c *client) ListOrg() ([]string, error) {
+	var r []string
+
+	p := int32(1)
+	opt := sdk.GetV5UserOrgsOpts{Admin: optional.NewBool(true)}
+
+	for {
+		opt.Page = optional.NewInt32(p)
+		ls, _, err := c.ac.OrganizationsApi.GetV5UserOrgs(context.Background(), &opt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(ls) == 0 {
+			break
+		}
+
+		for _, v := range ls {
+			r = append(r, v.Login)
+		}
+
+		p += 1
+	}
+
+	return r, nil
+}
+
 func formatErr(err error, doWhat string) error {
 	if err == nil {
 		return err
