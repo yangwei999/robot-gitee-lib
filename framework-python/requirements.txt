@@ -1,2 +1,0 @@
-gitee==1.0.0
-setuptools==45.2.0
