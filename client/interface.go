@@ -83,7 +83,7 @@ type Client interface {
 	GetUserPermissionsOfRepo(org, repo, login string) (sdk.ProjectMemberPermission, error)
 	GetEnterprisesMember(enterprise, login string) (sdk.EnterpriseMember, error)
 
-	CreateIssue(org, repo, title, body string) (sdk.Issue, error)
+	CreateIssue(org string, param sdk.IssueCreateParam) (sdk.Issue, error)
 	PatchFile(owner, repo, path, branch, content, sha, message string) error
 }
 

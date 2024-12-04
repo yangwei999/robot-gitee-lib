@@ -495,14 +495,14 @@ func (c *client) ListIssueComments(org, repo, number string) ([]sdk.Note, error)
 	return r, nil
 }
 
-//GetRepoAllBranch get repository all branch
+// GetRepoAllBranch get repository all branch
 func (c *client) GetRepoAllBranch(org, repo string) ([]sdk.Branch, error) {
 	branches, _, err := c.ac.RepositoriesApi.GetV5ReposOwnerRepoBranches(context.Background(), org, repo,
 		nil)
 	return branches, formatErr(err, "get repo all branch")
 }
 
-//GetPathContent Get the content under a specific repository
+// GetPathContent Get the content under a specific repository
 func (c *client) GetPathContent(org, repo, path, ref string) (sdk.Content, error) {
 	op := sdk.GetV5ReposOwnerRepoContentsPathOpts{}
 	op.Ref = optional.NewString(ref)
@@ -535,7 +535,7 @@ func (c *client) CreateFile(org, repo, branch, path, content, commitMsg string) 
 	return v, formatErr(err, "create file")
 }
 
-//GetDirectoryTree Get the directory tree under a specific repository branch or commit sha
+// GetDirectoryTree Get the directory tree under a specific repository branch or commit sha
 func (c *client) GetDirectoryTree(org, repo, sha string, recursive int32) (sdk.Tree, error) {
 	op := sdk.GetV5ReposOwnerRepoGitTreesShaOpts{Recursive: optional.NewInt32(recursive)}
 	trees, _, err := c.ac.GitDataApi.GetV5ReposOwnerRepoGitTreesSha(context.Background(), org, repo, sha, &op)
@@ -660,13 +660,7 @@ func (c *client) UpdateProjectLabels(org, repo string, label []string) error {
 	return formatErr(err, "update project label")
 }
 
-func (c *client) CreateIssue(org, repo, title, body string) (sdk.Issue, error) {
-	param := sdk.IssueCreateParam{
-		Repo:  repo,
-		Body:  body,
-		Title: title,
-	}
-
+func (c *client) CreateIssue(org string, param sdk.IssueCreateParam) (sdk.Issue, error) {
 	issue, _, err := c.ac.IssuesApi.PostV5ReposOwnerIssues(context.Background(), org, param)
 
 	return issue, formatErr(err, "create issue")
